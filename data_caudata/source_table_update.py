@@ -99,7 +99,7 @@ def create_observations_dataframe(place_id, date_after=None):
         time_passed = (datetime.now() - start_time).seconds
         print(f'{time_passed} seconds passed.. {counter} pages complete this iteration.')
 
-        if (time_passed >= 29 and time_passed % 30 >= 29) and counter >= 29:
+        if time_passed % 30 >= 29 and counter >= 29:
             counter = 0
             print(' -- pausing -- ')
             time.sleep(60)
@@ -121,7 +121,7 @@ def main():
     
     max_observed_date = '''
         SELECT 
-            MAX(observed_date) as max_observed_date
+             MAX(observed_date) as max_observed_date
         FROM washington_oregon_salamanders
     '''
 

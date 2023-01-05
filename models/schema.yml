@@ -1,0 +1,9 @@
+version: 2
+
+sources:
+  - name: datacaudata
+    database: postgres
+    schema: public
+
+    tables:
+      - name: washington_oregon_salamanders
