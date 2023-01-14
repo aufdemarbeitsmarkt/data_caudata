@@ -1,0 +1,31 @@
+name: source-table-update
+
+# for now, run when main changes; will set a schedule later
+on:
+  push:
+    branches:
+    - main
+
+# install dependencies
+jobs:
+  source-table-update:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+
+    - name: set up python 3.8
+      uses: actions/setup-python@v3
+      with:
+        python-version: 3.8
+    
+    - name: install dependencies
+      run: |
+        pip install -r requirements.txt
+
+    - name: update source table
+      env:
+        DB_USERNAME: ${{ secrets.DB_USERNAME }}
+        DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
+        HOST: ${{ secrets.HOST }}
+      run: |
+        source_table_update

@@ -1,7 +1,8 @@
 from datetime import datetime
+import json
+import os
 import time
 
-import json
 import pandas as pd
 import requests
 from sqlalchemy.exc import ProgrammingError
@@ -128,9 +129,6 @@ def remove_duplicate_observations(dataframe):
         con=ENGINE,
         index_col=None
     )
-
-    print('should NOT be writing these to DF: ')
-    print(dataframe['inaturalist_id'].isin(df_existing_inaturalist_id['inaturalist_id']))
 
     return dataframe.loc[~dataframe['inaturalist_id'].isin(df_existing_inaturalist_id['inaturalist_id'])]
 
