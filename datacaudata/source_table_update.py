@@ -97,12 +97,10 @@ def create_observations_dataframe(place_id, date_after=None):
     
         counter += 1
         time_passed = (datetime.now() - start_time).seconds
-        print(f'{time_passed} seconds passed.. {counter} pages complete this iteration.')
 
         # crudely avoiding ratelimiting
         if time_passed % 30 >= 29 and counter >= 29:
             counter = 0
-            print(' -- pausing -- ')
             time.sleep(60)
         
     df = pd.DataFrame(salamander_dict)
@@ -130,6 +128,10 @@ def remove_duplicate_observations(dataframe):
         con=ENGINE,
         index_col=None
     )
+
+    print('should NOT be writing these to DF: ')
+    print(dataframe['inaturalist_id'].isin(df_existing_inaturalist_id['inaturalist_id']))
+
     return dataframe.loc[~dataframe['inaturalist_id'].isin(df_existing_inaturalist_id['inaturalist_id'])]
 
 def main():
@@ -155,7 +157,7 @@ def main():
     for place in [WASHINGTON_PLACE_ID, OREGON_PLACE_ID]:
         df = create_observations_dataframe(place, date_after=date_after)
         df_deduped = remove_duplicate_observations(df)
-        write_observations_dataframe_to_db(df)
+        write_observations_dataframe_to_db(df_deduped)
 
 if __name__ == '__main__':
     main()
