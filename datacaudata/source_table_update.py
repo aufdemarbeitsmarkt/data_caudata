@@ -118,12 +118,26 @@ def write_observations_dataframe_to_db(dataframe):
         index=False
         )
 
+def remove_duplicate_observations(dataframe):
+    # dedupe based on inaturalist_id
+    existing_inaturalist_id = f'''
+        SELECT DISTINCT 
+             inaturalist_id
+        FROM {DB_TABLE}
+    '''
+    df_existing_inaturalist_id = pd.read_sql(
+        existing_inaturalist_id,
+        con=ENGINE,
+        index_col=None
+    )
+    return dataframe.loc[~dataframe['inaturalist_id'].isin(df_existing_inaturalist_id['inaturalist_id'])]
+
 def main():
     
-    max_observed_date = '''
+    max_observed_date = f'''
         SELECT 
              MAX(observed_date) as max_observed_date
-        FROM washington_oregon_salamanders
+        FROM {DB_TABLE}
     '''
 
     try:
@@ -140,6 +154,7 @@ def main():
     
     for place in [WASHINGTON_PLACE_ID, OREGON_PLACE_ID]:
         df = create_observations_dataframe(place, date_after=date_after)
+        df_deduped = remove_duplicate_observations(df)
         write_observations_dataframe_to_db(df)
 
 if __name__ == '__main__':

@@ -25,7 +25,10 @@ daily_summary as (
          species_days.taxon_id,
          species_days.latin_name,
          species_days.preferred_common_name, 
-         COALESCE(COUNT(DISTINCT salamanders.inaturalist_id), 0) as num_observations
+         COALESCE(COUNT(DISTINCT salamanders.inaturalist_id), 0) as num_observations,
+        -- place_ids (probably need a places model)
+        -- day over day change
+        -- avg rolling day over day change
     FROM species_days 
     LEFT JOIN salamanders
         ON salamanders.date_day_observed = species_days.date_day_observed AND salamanders.taxon_id = species_days.taxon_id
@@ -34,4 +37,5 @@ daily_summary as (
 
 SELECT *
 FROM daily_summary
+WHERE date_day_observed < CURRENT_DATE
 ORDER BY date_day_observed

@@ -1,9 +1,3 @@
-{{
-    config(
-        materialized = 'table'
-    )
-}}
-
 with base as (
     SELECT 
          inaturalist_id,
