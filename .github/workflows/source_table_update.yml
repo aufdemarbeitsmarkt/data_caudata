@@ -28,4 +28,4 @@ jobs:
         DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
         HOST: ${{ secrets.HOST }}
       run: |
-        source_table_update
+        python ./datacaudata/source_table_update.py

@@ -1,6 +1,5 @@
 from datetime import datetime
 import json
-import os
 import time
 
 import pandas as pd
@@ -25,20 +24,15 @@ DB_TABLE = 'washington_oregon_salamanders'
 
 
 def get_observations(params):
-
     response = requests.get(
         'https://api.inaturalist.org/v1/observations', 
         params=params
         )
-
     return response
 
 def create_observations_dataframe(place_id, date_after=None):
-
     start_time = datetime.now()
-    
     salamander_dict = {k: [] for k in COLUMNS}
-    
     params = {
     'taxon_id': CAUDATA_TAXON_ID,
     'place_id': place_id,
@@ -59,32 +53,27 @@ def create_observations_dataframe(place_id, date_after=None):
     counter = 1
     params['page'] = 0 # add a starting page to the params dict
     for n in range(num_pages):
-
         params['page'] += 1
-
         request = get_observations(params=params)
         request_json = request.json()['results']
         
         for r in request_json:
             salamander_dict['inaturalist_id'].append(r.get('id'))
-
             observed_on_details = r.get('observed_on_details', {})
             # there are times when the 'observed_on_details' key is present, but with a None value
+
             if observed_on_details is None: 
                 observed_on_details = {}
-
             salamander_dict['observed_date'].append(observed_on_details.get('date'))
             salamander_dict['observed_month'].append(observed_on_details.get('month'))
             salamander_dict['observed_hour'].append(observed_on_details.get('hour'))
             salamander_dict['observed_week'].append(observed_on_details.get('week'))
             salamander_dict['observed_year'].append(observed_on_details.get('year'))
             salamander_dict['observed_day'].append(observed_on_details.get('day'))
-
             salamander_dict['species_guess'].append(r.get('species_guess'))
             salamander_dict['identifications_most_disagree'].append(r.get('identifications_most_disagree'))
             salamander_dict['place_ids'].append(r.get('place_ids'))
             salamander_dict['location'].append(r.get('location'))
-
             taxon = r.get('taxon', {})
             salamander_dict['endemic'].append(taxon.get('endemic'))
             salamander_dict['native'].append(taxon.get('native'))
@@ -129,11 +118,9 @@ def remove_duplicate_observations(dataframe):
         con=ENGINE,
         index_col=None
     )
-
     return dataframe.loc[~dataframe['inaturalist_id'].isin(df_existing_inaturalist_id['inaturalist_id'])]
 
 def main():
-    
     max_observed_date = f'''
         SELECT 
              MAX(observed_date) as max_observed_date
@@ -156,6 +143,8 @@ def main():
         df = create_observations_dataframe(place, date_after=date_after)
         df_deduped = remove_duplicate_observations(df)
         write_observations_dataframe_to_db(df_deduped)
+        print(f'{len(df_deduped.index)} new rows added to {DB_TABLE}')
+
 
 if __name__ == '__main__':
     main()
