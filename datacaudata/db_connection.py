@@ -2,18 +2,22 @@ import os
 
 from sqlalchemy import create_engine
 
+
 try:
-    from config import *
+    # fall back to config credentials, i.e. assume we're working locally
+    from config import DB_USERNAME, DB_PASSWORD, HOST
+
+    os.environ['DB_USERNAME'] = DB_USERNAME
+    os.environ['DB_PASSWORD'] = DB_PASSWORD
+    os.environ['HOST'] = HOST
+
 except ModuleNotFoundError:
     pass
 
+DB_USERNAME = os.environ.get('DB_USERNAME')
+DB_PASSWORD = os.environ.get('DB_PASSWORD')
+HOST = os.environ.get('HOST')
 
-if __name__ == '__main__':
-    # fall back to config credentials, i.e. assume we're working locally
-    DB_USERNAME = os.environ.get('DB_USERNAME', config.DB_USERNAME)
-    DB_PASSWORD = os.environ.get('DB_PASSWORD', config.DB_PASSWORD)
-    HOST = os.environ.get('HOST', config.HOST)
+CONNECTION_STRING = f'postgresql+psycopg2://{DB_USERNAME}:{DB_PASSWORD}@{HOST}/postgres'
 
-    CONNECTION_STRING = f'postgresql+psycopg2://{DB_USERNAME}:{DB_PASSWORD}@{HOST}/postgres'
-
-    ENGINE = create_engine(CONNECTION_STRING)
+ENGINE = create_engine(CONNECTION_STRING)
