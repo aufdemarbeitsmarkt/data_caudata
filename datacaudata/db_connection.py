@@ -2,7 +2,10 @@ import os
 
 from sqlalchemy import create_engine
 
-from config import *
+try:
+    from config import *
+except ModuleNotFoundError:
+    pass
 
 
 if __name__ == '__main__':
