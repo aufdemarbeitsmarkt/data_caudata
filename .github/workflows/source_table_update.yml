@@ -5,8 +5,11 @@ on:
   push:
     branches:
     - main
+  # run every Sunday at 00:00
+  schedule:
+    - cron: '0 0 * * 0'
 
-# install dependencies
+# install dependencies & run source_table_update.py
 jobs:
   source-table-update:
     runs-on: ubuntu-latest

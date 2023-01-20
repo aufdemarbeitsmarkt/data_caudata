@@ -1,6 +1,6 @@
 with salamanders as (
     SELECT *
-    FROM {{ref('stg_washington_oregon_salamanders')}}
+    FROM {{ref('stg_datacaudata__washington_oregon_salamanders')}}
 ), 
 
 days as (

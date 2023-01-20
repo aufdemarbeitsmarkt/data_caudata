@@ -14,10 +14,27 @@ WASHINGTON_PLACE_ID = 46
 CAUDATA_TAXON_ID = 26718
 
 COLUMNS = [
-    'inaturalist_id', 'observed_date', 'observed_month', 'observed_hour', 'observed_week', 
-    'observed_year', 'observed_day', 'species_guess', 'identifications_most_disagree', 'place_ids', 
-    'location', 'endemic', 'native', 'introduced', 'threatened', 
-    'name', 'rank', 'taxon_id', 'wikipedia_url', 'preferred_common_name'
+    'endemic',
+    'identifications_most_disagree',
+    'inaturalist_id',
+    'introduced',
+    'location',
+    'name',
+    'native',
+    'observed_date',
+    'observed_day',
+    'observed_hour',
+    'observed_month',
+    'observed_week', 
+    'observed_year',
+    'place_ids',
+    'preferred_common_name',
+    'rank',
+    'species_guess',
+    'taxon_id',
+    'threatened', 
+    'updated_at',
+    'wikipedia_url'
 ]
 
 DB_TABLE = 'washington_oregon_salamanders'
@@ -30,7 +47,7 @@ def get_observations(params):
         )
     return response
 
-def create_observations_dataframe(place_id, date_after=None):
+def create_observations_dataframe(place_id, updated_after=None):
     start_time = datetime.now()
     salamander_dict = {k: [] for k in COLUMNS}
     params = {
@@ -40,8 +57,8 @@ def create_observations_dataframe(place_id, date_after=None):
     'per_page': 100
     }
 
-    if date_after is not None:
-        params['d1'] = date_after
+    if updated_after is not None:
+        params['updated_since'] = updated_after
     
     request = get_observations(params=params)
     request_json = request.json()
@@ -70,6 +87,7 @@ def create_observations_dataframe(place_id, date_after=None):
             salamander_dict['observed_week'].append(observed_on_details.get('week'))
             salamander_dict['observed_year'].append(observed_on_details.get('year'))
             salamander_dict['observed_day'].append(observed_on_details.get('day'))
+            salamander_dict['updated_at'].append(r.get('updated_at'))
             salamander_dict['species_guess'].append(r.get('species_guess'))
             salamander_dict['identifications_most_disagree'].append(r.get('identifications_most_disagree'))
             salamander_dict['place_ids'].append(r.get('place_ids'))
@@ -94,7 +112,17 @@ def create_observations_dataframe(place_id, date_after=None):
             time.sleep(60)
         
     df = pd.DataFrame(salamander_dict)
+
     df['observed_date'] = pd.to_datetime(df['observed_date'])
+    df['updated_at'] = pd.to_datetime(df['updated_at'])
+    
+    # create a unique id column
+    df['id'] = (
+        df['inaturalist_id'].astype(str)\
+            + pd.to_datetime(df['updated_at'], utc=True).map(pd.Timestamp.timestamp).astype(str)\
+                + df['preferred_common_name'].str[:3] + df['preferred_common_name'].str[-3:]
+        )
+    df['_data_loaded_date'] = pd.to_datetime(datetime.now().strftime('%Y-%m-%d'))
 
     return df
 
@@ -108,42 +136,46 @@ def write_observations_dataframe_to_db(dataframe):
 
 def remove_duplicate_observations(dataframe):
     # dedupe based on inaturalist_id
-    existing_inaturalist_id = f'''
-        SELECT DISTINCT 
-             inaturalist_id
-        FROM {DB_TABLE}
-    '''
-    df_existing_inaturalist_id = pd.read_sql(
-        existing_inaturalist_id,
-        con=ENGINE,
-        index_col=None
-    )
-    return dataframe.loc[~dataframe['inaturalist_id'].isin(df_existing_inaturalist_id['inaturalist_id'])]
+    try:
+        existing_ids = f'''
+            SELECT DISTINCT 
+                 id
+            FROM {DB_TABLE}
+        '''
+        df_existing_ids = pd.read_sql(
+            existing_ids,
+            con=ENGINE,
+            index_col=None
+        )
+        return dataframe.loc[~dataframe['id'].isin(df_existing_ids['id'])]
+    except ProgrammingError:
+        return dataframe
 
 def main():
-    max_observed_date = f'''
+    max_updated_at = f'''
         SELECT 
-             MAX(observed_date) as max_observed_date
+             MAX(updated_at) as max_updated_at
         FROM {DB_TABLE}
     '''
 
     try:
         df = pd.read_sql(
-                max_observed_date,
+                max_updated_at,
                 con=ENGINE,
                 index_col=None
             )
-        date_after = df['max_observed_date'][0].strftime('%Y-%m-%d')
-        print(f'getting observations from {date_after} onward')
-    except ProgrammingError:
-        # the table has not been created, so we're starting from "scratch"
+        date_after = df['max_updated_at'][0].strftime('%Y-%m-%d')
+        print(f'getting observations updated from {date_after} onward\n-----')
+    except (ProgrammingError, AttributeError):
+        # the table has not been created or is empty, so we're starting from "scratch"
         date_after = None
     
     for place in [WASHINGTON_PLACE_ID, OREGON_PLACE_ID]:
-        df = create_observations_dataframe(place, date_after=date_after)
+        df = create_observations_dataframe(place, updated_after=date_after)
         df_deduped = remove_duplicate_observations(df)
         write_observations_dataframe_to_db(df_deduped)
-        print(f'{len(df_deduped.index)} new rows added to {DB_TABLE}')
+
+        print(f'{len(df_deduped.index)} new rows added to {DB_TABLE} for {place=}\n-----')
 
 
 if __name__ == '__main__':

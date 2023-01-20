@@ -1,5 +1,6 @@
 with base as (
     SELECT 
+		 id,
          inaturalist_id,
 	     taxon_id,
 	     name as latin_name,
@@ -10,6 +11,7 @@ with base as (
 	     observed_week::INTEGER as observed_week,
 	     observed_year::INTEGER as observed_year,
 	     observed_day::INTEGER as observed_day,
+		 updated_at,
 	     species_guess,
 	     (species_guess = preferred_common_name) as species_guess_correct,
 	     place_ids::INTEGER[] as place_id_array,
@@ -21,7 +23,8 @@ with base as (
 	     introduced,
 	     threatened,
 	     rank,
-	     wikipedia_url
+	     wikipedia_url,
+		 _data_loaded_date
     FROM {{source('datacaudata', 'washington_oregon_salamanders')}}
     WHERE observed_date >= '2008-01-01'
 	  AND observed_date IS NOT NULL
