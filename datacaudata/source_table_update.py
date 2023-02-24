@@ -78,7 +78,6 @@ def create_observations_dataframe(place_id, updated_after=None):
             salamander_dict['inaturalist_id'].append(r.get('id'))
             observed_on_details = r.get('observed_on_details', {})
             # there are times when the 'observed_on_details' key is present, but with a None value
-
             if observed_on_details is None: 
                 observed_on_details = {}
             salamander_dict['observed_date'].append(observed_on_details.get('date'))
@@ -120,7 +119,7 @@ def create_observations_dataframe(place_id, updated_after=None):
     df['id'] = (
         df['inaturalist_id'].astype(str)\
             + pd.to_datetime(df['updated_at'], utc=True).map(pd.Timestamp.timestamp).astype(str)\
-                + df['preferred_common_name'].str[:3] + df['preferred_common_name'].str[-3:]
+                + df['name'].str[:3] + df['name'].str[-3:]
         )
     df['_data_loaded_date'] = pd.to_datetime(datetime.now().strftime('%Y-%m-%d'))
 
