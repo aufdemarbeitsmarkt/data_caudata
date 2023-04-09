@@ -13,5 +13,5 @@ SELECT
      unique_id,
      y
 FROM monthly_species_summary_by_location
--- to be eligible for forecasting, let's require 5 observations for a given location and species combination in the last 3 years
-WHERE num_observations_this_species_location_id > 5
+-- to be eligible for forecasting, let's require 20 observations for a given location and species combination in the last 3 years
+WHERE num_observations_this_species_location_id > 20
