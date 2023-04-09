@@ -5,8 +5,7 @@ with monthly_species_summary_by_location as (
         num_observations as y,
         SUM(num_observations) OVER (PARTITION BY species_location_id) as num_observations_this_species_location_id
     FROM {{ref('monthly_species_summary_by_location')}}
-    WHERE taxon_id = 26822
-      AND EXTRACT('year' FROM date_month_observed) >= EXTRACT('year' FROM CURRENT_DATE) - 3
+    WHERE EXTRACT('year' FROM date_month_observed) >= EXTRACT('year' FROM CURRENT_DATE) - 3
 )
 
 SELECT 
