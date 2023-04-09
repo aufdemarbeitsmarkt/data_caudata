@@ -121,7 +121,7 @@ def create_observations_dataframe(place_id, updated_after=None):
     df['id'] = (
         df['inaturalist_id'].astype(str)\
             + pd.to_datetime(df['updated_at'], utc=True).map(pd.Timestamp.timestamp).astype(str)\
-                + df['name'].str[:3] + df['name'].str[-3:]
+                + df['name'].astype(str).str[:3] + df['name'].astype(str).str[-3:]
         )
     df['_data_loaded_date'] = pd.to_datetime(datetime.now().strftime('%Y-%m-%d'))
 
