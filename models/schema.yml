@@ -7,3 +7,4 @@ sources:
 
     tables:
       - name: washington_oregon_salamanders
+      - name: forecasts

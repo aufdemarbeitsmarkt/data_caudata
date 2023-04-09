@@ -40,10 +40,7 @@ daily_summary as (
          species_days.latin_name,
          species_days.preferred_common_name, 
          COALESCE(COUNT(DISTINCT salamanders.inaturalist_id), 0)::INTEGER as num_observations,
-         COALESCE(SUM(species_guess_correct::INTEGER), 0)::INTEGER as num_correct_guesses,
-         BOOL_OR(endemic) as endemic,
-         BOOL_OR(native) as native,
-         BOOL_OR(threatened) as threatened
+         COALESCE(SUM(species_guess_correct::INTEGER), 0)::INTEGER as num_correct_guesses
     FROM species_days 
     LEFT JOIN salamanders
         ON salamanders.date_day_observed = species_days.date_day_observed AND salamanders.taxon_id = species_days.taxon_id
@@ -99,11 +96,7 @@ changes_and_deltas as (
 
          avg_rolling_seven_day_observations,
          max_local_seven_day_observations,
-         min_local_seven_day_observations,
-
-         endemic,
-         native,
-         threatened
+         min_local_seven_day_observations
 
     FROM windowed
 ),
@@ -136,17 +129,7 @@ final as (
          SUM(dod_observations_change) OVER (
             PARTITION BY taxon_id 
             ORDER BY date_day_observed
-         ) as cumulative_sum_dod_observations_change,
-
-         BOOL_OR(endemic) OVER (
-            PARTITION BY taxon_id
-         ) as endemic,
-         BOOL_OR(native) OVER (
-            PARTITION BY taxon_id
-         ) as native,
-         BOOL_OR(threatened) OVER (
-            PARTITION BY taxon_id
-         ) as threatened
+         ) as cumulative_sum_dod_observations_change
     FROM changes_and_deltas
 )
 

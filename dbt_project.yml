@@ -19,3 +19,5 @@ clean-targets:         # directories to be removed by `dbt clean`
 models:
   data_caudata:
     +materialized: view
+    utilities:
+      materialized: table

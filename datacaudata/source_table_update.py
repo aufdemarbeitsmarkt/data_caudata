@@ -1,5 +1,4 @@
 from datetime import datetime
-import json
 import time
 
 import pandas as pd
@@ -12,6 +11,7 @@ from db_connection import ENGINE
 OREGON_PLACE_ID = 10
 WASHINGTON_PLACE_ID = 46
 CAUDATA_TAXON_ID = 26718
+
 
 COLUMNS = [
     'endemic',
@@ -27,6 +27,7 @@ COLUMNS = [
     'observed_month',
     'observed_week', 
     'observed_year',
+    'out_of_range',
     'place_ids',
     'preferred_common_name',
     'rank',
@@ -51,10 +52,10 @@ def create_observations_dataframe(place_id, updated_after=None):
     start_time = datetime.now()
     salamander_dict = {k: [] for k in COLUMNS}
     params = {
-    'taxon_id': CAUDATA_TAXON_ID,
-    'place_id': place_id,
-    'captive': 'false',
-    'per_page': 100
+        'taxon_id': CAUDATA_TAXON_ID,
+        'place_id': place_id,
+        'captive': 'false',
+        'per_page': 100
     }
 
     if updated_after is not None:
@@ -86,6 +87,7 @@ def create_observations_dataframe(place_id, updated_after=None):
             salamander_dict['observed_week'].append(observed_on_details.get('week'))
             salamander_dict['observed_year'].append(observed_on_details.get('year'))
             salamander_dict['observed_day'].append(observed_on_details.get('day'))
+            salamander_dict['out_of_range'].append(r.get('out_of_range'))
             salamander_dict['updated_at'].append(r.get('updated_at'))
             salamander_dict['species_guess'].append(r.get('species_guess'))
             salamander_dict['identifications_most_disagree'].append(r.get('identifications_most_disagree'))
@@ -174,7 +176,7 @@ def main():
         df_deduped = remove_duplicate_observations(df)
         write_observations_dataframe_to_db(df_deduped)
 
-        print(f'{len(df_deduped.index)} new rows added to {DB_TABLE} for {place=}\n-----')
+        print(f'{len(df_deduped.index)} new rows added to `{DB_TABLE}` for `{place=}`\n-----')
 
 
 if __name__ == '__main__':

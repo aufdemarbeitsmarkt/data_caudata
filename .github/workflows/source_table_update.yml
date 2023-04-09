@@ -1,4 +1,4 @@
-name: source-table-update
+name: source-table-update-and-forecast
 
 # for now, run when main changes; will set a schedule later
 on:
@@ -11,7 +11,7 @@ on:
 
 # install dependencies & run source_table_update.py
 jobs:
-  source-table-update:
+  source-table-update-and-forecast:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v3
@@ -25,10 +25,11 @@ jobs:
       run: |
         pip install -r requirements.txt
 
-    - name: update source table
+    - name: update source table and forecasts
       env:
         DB_USERNAME: ${{ secrets.DB_USERNAME }}
         DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
         HOST: ${{ secrets.HOST }}
       run: |
         python ./datacaudata/source_table_update.py
+        python ./datacaudata/forecast.py

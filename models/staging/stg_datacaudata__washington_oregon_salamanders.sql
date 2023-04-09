@@ -15,9 +15,7 @@ with base as (
 	     species_guess,
 	     (species_guess = preferred_common_name) as species_guess_correct,
 	     place_ids::INTEGER[] as place_id_array,
-	     location as coordinates,
-         SPLIT_PART(location, ',', 1)::DOUBLE PRECISION as latitude,
-	     SPLIT_PART(location, ',', 2)::DOUBLE PRECISION as longitude,
+         STRING_TO_ARRAY(location, ',')::NUMERIC[] as coordinates,
 	     endemic,
 	     native,
 	     introduced,
@@ -28,8 +26,13 @@ with base as (
     FROM {{source('datacaudata', 'washington_oregon_salamanders')}}
     WHERE observed_date >= '2008-01-01'
 	  AND observed_date IS NOT NULL
-	  
 )
 
-SELECT *
+SELECT 
+     *, 
+     coordinates[1] as latitude,
+     coordinates[2] as longitude,
+     -- Coordinates rounded to 2 decimals give us an accuracy of 1.11 km (http://wiki.gis.com/wiki/index.php/Decimal_degrees)
+     {{dbt_utils.generate_surrogate_key(['ROUND(coordinates[1], 2)', 'ROUND(coordinates[2], 2)']
+)}} as location_id
 FROM base
